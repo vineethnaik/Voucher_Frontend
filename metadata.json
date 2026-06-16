@@ -1,0 +1,6 @@
+{
+  "name": "VoucherPro",
+  "description": "Access premium certification vouchers and tools designed to accelerate your professional growth.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
