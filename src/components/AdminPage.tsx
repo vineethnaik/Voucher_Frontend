@@ -520,9 +520,7 @@ export default function AdminPage() {
             </button>
           </form>
 
-          <p className="text-center text-xs text-slate-500">
-            Default admin: <span className="font-mono font-semibold">admin@voucherpro.com</span> / <span className="font-mono font-semibold">voucherpro-admin</span>
-          </p>
+          
 
           <a
             href="#/"
