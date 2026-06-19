@@ -16,7 +16,7 @@ import VoucherCard from './VoucherCard';
 import ExamQuiz from './ExamQuiz';
 import {
   LogOut, Tag, CheckCircle, Copy, Ticket,
-  BookOpen, Trophy, ArrowRight, UserCheck, CreditCard, X, Sparkles, QrCode, AlertCircle, Clock
+  BookOpen, Trophy, ArrowRight, UserCheck, CreditCard, X, Sparkles, QrCode, AlertCircle, Clock, User, Shield
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -63,13 +63,12 @@ export default function Dashboard({ userEmail, userName, authToken, onLogout }: 
     }
   }, [authToken]);
 
-  const [activeTab, setActiveTab] = useState<'marketplace' | 'my-vouchers' | 'practice-quiz'>('marketplace');
+  const [activeTab, setActiveTab] = useState<'marketplace' | 'my-vouchers' | 'practice-quiz' | 'profile'>('marketplace');
 
   useEffect(() => {
+    loadOrders(); // Always load orders to filter the catalog and populate profile statistics
     if (activeTab === 'marketplace') {
       loadCatalog();
-    } else if (activeTab === 'my-vouchers') {
-      loadOrders();
     }
   }, [activeTab, loadCatalog, loadOrders]);
 
@@ -179,6 +178,11 @@ export default function Dashboard({ userEmail, userName, authToken, onLogout }: 
     triggerToast(`⭐ Quiz recorded: You scored ${score}/5!`);
   };
 
+  // Filter out vouchers that have a matching order with a PAID status
+  const availableVouchers = catalogVouchers.filter(
+    (voucher) => !orders.some(o => o.voucherId === voucher.id && o.paymentStatus === 'PAID')
+  );
+
   // Compute stats
   const totalClaimed = orders.filter(o => o.paymentStatus === 'PAID').length;
   const pendingVerification = orders.filter(o => o.paymentStatus === 'VERIFICATION_PENDING').length;
@@ -243,7 +247,7 @@ export default function Dashboard({ userEmail, userName, authToken, onLogout }: 
         <div className="max-w-7xl mx-auto px-6 sm:px-8 py-10 relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="p-1 rounded bg-white/20">
+              <span className="p-1 rounded bg-white/20 animate-pulse">
                 <Ticket className="w-5 h-5 text-[#ffb95f]" />
               </span>
               <span className="text-sm font-bold uppercase tracking-widest text-[#ffddb8]">Professional Hub</span>
@@ -254,8 +258,8 @@ export default function Dashboard({ userEmail, userName, authToken, onLogout }: 
             </p>
           </div>
 
-          <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/10">
-            <div className="w-12 h-12 rounded-full bg-white/25 flex items-center justify-center font-bold text-lg text-[#ffddb8] border-2 border-white/35 shadow-inner uppercase">
+          <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/10 hover:bg-white/15 transition-all duration-300 group">
+            <div className="w-12 h-12 rounded-full bg-white/25 flex items-center justify-center font-bold text-lg text-[#ffddb8] border-2 border-white/35 shadow-inner uppercase group-hover:scale-105 transition-all duration-300">
               {userName.substring(0, 2)}
             </div>
             <div className="text-left space-y-0.5">
@@ -279,7 +283,10 @@ export default function Dashboard({ userEmail, userName, authToken, onLogout }: 
       {/* Stats Bento Grid Panel */}
       <section className="bg-white border-b border-slate-100 shadow-xs shrink-0">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 py-6 grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div className="p-4 bg-[#f2f3fd] rounded-2xl border border-slate-100 flex items-center gap-4 transition-all hover:shadow-xs">
+          <motion.div 
+            whileHover={{ scale: 1.02 }}
+            className="p-4 bg-[#f2f3fd] rounded-2xl border border-slate-100 flex items-center gap-4 transition-all duration-300 shadow-xs cursor-default"
+          >
             <div className="p-3 bg-[#0058be]/10 text-[#0058be] rounded-xl">
               <Ticket className="w-5 h-5" />
             </div>
@@ -287,9 +294,12 @@ export default function Dashboard({ userEmail, userName, authToken, onLogout }: 
               <div className="text-xs font-semibold text-[#424754] uppercase tracking-wider">Acquired Vouchers</div>
               <div className="text-2xl font-extrabold text-slate-900">{totalClaimed}</div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="p-4 bg-[#f2f3fd] rounded-2xl border border-slate-100 flex items-center gap-4 transition-all hover:shadow-xs">
+          <motion.div 
+            whileHover={{ scale: 1.02 }}
+            className="p-4 bg-[#f2f3fd] rounded-2xl border border-slate-100 flex items-center gap-4 transition-all duration-300 shadow-xs cursor-default"
+          >
             <div className="p-3 bg-amber-100 text-amber-700 rounded-xl">
               <Clock className="w-5 h-5" />
             </div>
@@ -297,9 +307,12 @@ export default function Dashboard({ userEmail, userName, authToken, onLogout }: 
               <div className="text-xs font-semibold text-[#424754] uppercase tracking-wider">Pending Audit</div>
               <div className="text-2xl font-extrabold text-amber-600">{pendingVerification}</div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="p-4 bg-[#f2f3fd] rounded-2xl border border-slate-100 flex items-center gap-4 transition-all hover:shadow-xs">
+          <motion.div 
+            whileHover={{ scale: 1.02 }}
+            className="p-4 bg-[#f2f3fd] rounded-2xl border border-slate-100 flex items-center gap-4 transition-all duration-300 shadow-xs cursor-default"
+          >
             <div className="p-3 bg-amber-100 text-[#825100] rounded-xl">
               <Trophy className="w-5 h-5" />
             </div>
@@ -307,9 +320,12 @@ export default function Dashboard({ userEmail, userName, authToken, onLogout }: 
               <div className="text-xs font-semibold text-[#424754] uppercase tracking-wider">Average Score</div>
               <div className="text-2xl font-extrabold text-[#825100]">{avgQuizScore} <span className="text-xs text-slate-500">/5</span></div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="p-4 bg-[#f2f3fd] rounded-2xl border border-slate-100 flex items-center gap-4 transition-all hover:shadow-xs col-span-2 md:col-span-1">
+          <motion.div 
+            whileHover={{ scale: 1.02 }}
+            className="p-4 bg-[#f2f3fd] rounded-2xl border border-slate-100 flex items-center gap-4 transition-all duration-300 shadow-xs cursor-default col-span-2 md:col-span-1"
+          >
             <div className="p-3 bg-purple-100 text-purple-700 rounded-xl">
               <BookOpen className="w-5 h-5" />
             </div>
@@ -317,7 +333,7 @@ export default function Dashboard({ userEmail, userName, authToken, onLogout }: 
               <div className="text-xs font-semibold text-[#424754] uppercase tracking-wider">Total Quizzes</div>
               <div className="text-2xl font-extrabold text-purple-700">{quizScoresList.length} completed</div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -327,7 +343,7 @@ export default function Dashboard({ userEmail, userName, authToken, onLogout }: 
         <div className="flex border-b border-slate-200">
           <button
             onClick={() => setActiveTab('marketplace')}
-            className={`py-3 px-6 font-bold text-sm border-b-2 cursor-pointer transition-all flex items-center gap-2 ${
+            className={`py-3 px-6 font-bold text-sm border-b-2 cursor-pointer transition-all duration-300 flex items-center gap-2 ${
               activeTab === 'marketplace'
                 ? 'border-[#0058be] text-[#0058be]'
                 : 'border-transparent text-[#424754] hover:text-[#191b23]'
@@ -338,7 +354,7 @@ export default function Dashboard({ userEmail, userName, authToken, onLogout }: 
           </button>
           <button
             onClick={() => setActiveTab('my-vouchers')}
-            className={`py-3 px-6 font-bold text-sm border-b-2 cursor-pointer transition-all flex items-center gap-2 ${
+            className={`py-3 px-6 font-bold text-sm border-b-2 cursor-pointer transition-all duration-300 flex items-center gap-2 ${
               activeTab === 'my-vouchers'
                 ? 'border-[#0058be] text-[#0058be]'
                 : 'border-transparent text-[#424754] hover:text-[#191b23]'
@@ -349,7 +365,7 @@ export default function Dashboard({ userEmail, userName, authToken, onLogout }: 
           </button>
           <button
             onClick={() => setActiveTab('practice-quiz')}
-            className={`py-3 px-6 font-bold text-sm border-b-2 cursor-pointer transition-all flex items-center gap-2 ${
+            className={`py-3 px-6 font-bold text-sm border-b-2 cursor-pointer transition-all duration-300 flex items-center gap-2 ${
               activeTab === 'practice-quiz'
                 ? 'border-[#0058be] text-[#0058be]'
                 : 'border-transparent text-[#424754] hover:text-[#191b23]'
@@ -357,6 +373,17 @@ export default function Dashboard({ userEmail, userName, authToken, onLogout }: 
           >
             <BookOpen className="w-4 h-4" />
             <span>Practice Simulator</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={`py-3 px-6 font-bold text-sm border-b-2 cursor-pointer transition-all duration-300 flex items-center gap-2 ${
+              activeTab === 'profile'
+                ? 'border-[#0058be] text-[#0058be]'
+                : 'border-transparent text-[#424754] hover:text-[#191b23]'
+            }`}
+          >
+            <User className="w-4 h-4" />
+            <span>My Profile</span>
           </button>
         </div>
 
@@ -392,24 +419,43 @@ export default function Dashboard({ userEmail, userName, authToken, onLogout }: 
                       Retry
                     </button>
                   </div>
-                ) : catalogVouchers.length === 0 ? (
-                  <div className="text-center py-16 bg-white border border-[#e1e2ec] rounded-2xl text-sm text-slate-500">
-                    No vouchers available yet. Check back soon or ask an admin to add courses.
-                  </div>
+                ) : availableVouchers.length === 0 ? (
+                  <motion.div 
+                    initial={{ scale: 0.98, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="text-center py-16 bg-white border border-[#e1e2ec] rounded-3xl p-8 space-y-4 max-w-lg mx-auto shadow-xs"
+                  >
+                    <div className="inline-flex p-4 rounded-full bg-emerald-50 text-emerald-600">
+                      <Sparkles size={40} className="animate-bounce" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-black text-slate-800">You're All Set!</h4>
+                      <p className="text-xs text-slate-500 leading-relaxed mt-2.5">
+                        You have purchased all available exam vouchers on our store catalog. Check your copyable promo keys under the **My Orders** tab to register on PearsonVUE!
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setActiveTab('my-vouchers')}
+                      className="px-5 py-2.5 bg-[#0058be] text-white font-bold text-xs rounded-xl hover:bg-[#4648d4] transition-all cursor-pointer shadow-xs"
+                    >
+                      View My Vouchers
+                    </button>
+                  </motion.div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {catalogVouchers.map((voucher) => {
-                      const hasPaidOrder = orders.some(o => o.voucherId === voucher.id && o.paymentStatus === 'PAID');
-                      return (
-                        <div key={voucher.id} className="flex flex-col">
-                          <VoucherCard
-                            voucher={voucher}
-                            isClaimed={hasPaidOrder}
-                            onClaim={handleClaimVoucherClick}
-                          />
-                        </div>
-                      );
-                    })}
+                    {availableVouchers.map((voucher) => (
+                      <motion.div 
+                        key={voucher.id} 
+                        whileHover={{ y: -4 }}
+                        className="flex flex-col transition-all duration-300"
+                      >
+                        <VoucherCard
+                          voucher={voucher}
+                          isClaimed={false}
+                          onClaim={handleClaimVoucherClick}
+                        />
+                      </motion.div>
+                    ))}
                   </div>
                 )}
               </motion.div>
@@ -477,9 +523,10 @@ export default function Dashboard({ userEmail, userName, authToken, onLogout }: 
                       const isPending = order.paymentStatus === 'PENDING';
 
                       return (
-                        <div
+                        <motion.div
                           key={order.id}
-                          className={`bg-white rounded-2xl border border-slate-100 overflow-hidden relative shadow-sm flex flex-col justify-between transition-all duration-300 ${
+                          whileHover={{ scale: 1.01 }}
+                          className={`bg-white rounded-2xl border border-slate-100 overflow-hidden relative shadow-xs flex flex-col justify-between transition-all duration-300 ${
                             isPaid ? 'hover:shadow-md' : 'opacity-90'
                           }`}
                         >
@@ -568,7 +615,7 @@ export default function Dashboard({ userEmail, userName, authToken, onLogout }: 
                               </div>
                             </div>
                           </div>
-                        </div>
+                        </motion.div>
                       );
                     })}
                   </div>
@@ -585,6 +632,147 @@ export default function Dashboard({ userEmail, userName, authToken, onLogout }: 
                 className="max-w-3xl mx-auto"
               >
                 <ExamQuiz onScoreSave={handleScoreSave} />
+              </motion.div>
+            )}
+
+            {activeTab === 'profile' && (
+              <motion.div
+                key="profile"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                className="max-w-4xl mx-auto space-y-8"
+              >
+                {/* Profile Cover & Main Info Card */}
+                <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden relative group">
+                  <div className="h-32 bg-gradient-to-r from-[#0058be] via-[#4648d4] to-[#2170e4] relative">
+                    <div className="absolute inset-0 bg-white/5 bg-[radial-gradient(circle_at_right,_var(--tw-gradient-stops))] from-white/15 via-transparent to-transparent"></div>
+                  </div>
+
+                  <div className="px-8 pb-8 relative flex flex-col md:flex-row items-center md:items-end gap-6 -mt-16 md:-mt-10">
+                    {/* Avatar with dynamic ring animation */}
+                    <div className="relative shrink-0">
+                      <div 
+                        style={{ animationDuration: '6s' }}
+                        className="absolute inset-0 rounded-full bg-gradient-to-tr from-[#0058be] to-[#ffb95f] animate-spin blur-xs"
+                      ></div>
+                      <div className="w-24 h-24 rounded-full bg-white p-1 relative z-10 shadow-md">
+                        <div className="w-full h-full rounded-full bg-gradient-to-br from-[#4648d4] to-[#0058be] flex items-center justify-center font-black text-2xl text-white uppercase shadow-inner">
+                          {userName.substring(0, 2)}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Basic Info */}
+                    <div className="text-center md:text-left space-y-1.5 md:mb-2 flex-grow">
+                      <div className="flex flex-col md:flex-row md:items-center gap-2">
+                        <h2 className="text-2xl font-black text-slate-900 tracking-tight">{userName}</h2>
+                        <span className="text-[10px] font-bold bg-[#0058be]/10 text-[#0058be] border border-[#0058be]/20 px-2.5 py-0.5 rounded-full uppercase tracking-widest w-fit mx-auto md:mx-0">
+                          Verified Candidate
+                        </span>
+                      </div>
+                      <p className="text-sm font-medium text-slate-500 font-mono">{userEmail}</p>
+                    </div>
+
+                    {/* Role badge */}
+                    <div className="md:mb-2 shrink-0">
+                      <div className="bg-slate-50 border border-slate-200 px-4 py-2 rounded-2xl flex items-center gap-2 text-xs font-semibold text-slate-700">
+                        <Shield className="w-4 h-4 text-[#0058be]" />
+                        <span>Role: Standard USER</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Grid stats and detail cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Detailed statistics */}
+                  <motion.div 
+                    whileHover={{ y: -2 }}
+                    className="bg-white rounded-3xl border border-slate-100 p-6 shadow-xs space-y-4 hover:shadow-sm transition-all duration-300"
+                  >
+                    <h3 className="text-xs uppercase font-extrabold text-slate-400 tracking-widest flex items-center gap-1.5">
+                      <Trophy className="w-4 h-4 text-[#ffb95f]" />
+                      <span>Exam Progress</span>
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center text-sm font-bold text-slate-800">
+                        <span>Total Vouchers Unlocked</span>
+                        <span className="text-[#0058be] text-lg font-black">{totalClaimed}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm font-bold text-slate-800">
+                        <span>Pending Auditing</span>
+                        <span className="text-amber-500 text-lg font-black">{pendingVerification}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm font-bold text-slate-800">
+                        <span>Mock Exams Passed</span>
+                        <span className="text-purple-700 text-lg font-black">{quizScoresList.filter(s => s >= 4).length}</span>
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  {/* Practice performance details */}
+                  <motion.div 
+                    whileHover={{ y: -2 }}
+                    className="bg-white rounded-3xl border border-slate-100 p-6 shadow-xs space-y-4 hover:shadow-sm transition-all duration-300"
+                  >
+                    <h3 className="text-xs uppercase font-extrabold text-slate-400 tracking-widest flex items-center gap-1.5">
+                      <BookOpen className="w-4 h-4 text-purple-600" />
+                      <span>Simulations Performance</span>
+                    </h3>
+                    <div className="space-y-3.5">
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-xs font-bold text-slate-600">
+                          <span>Average Test Score</span>
+                          <span>{avgQuizScore} / 5</span>
+                        </div>
+                        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                          <div 
+                            className="bg-purple-600 h-full rounded-full transition-all duration-500"
+                            style={{ width: `${(parseFloat(avgQuizScore) / 5) * 100}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-xs font-bold text-slate-600">
+                          <span>Syllabus Covered</span>
+                          <span>{totalClaimed > 0 ? '60%' : '10%'}</span>
+                        </div>
+                        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                          <div 
+                            className="bg-emerald-500 h-full rounded-full transition-all duration-500" 
+                            style={{ width: totalClaimed > 0 ? '60%' : '10%' }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  {/* Account Information details */}
+                  <motion.div 
+                    whileHover={{ y: -2 }}
+                    className="bg-white rounded-3xl border border-slate-100 p-6 shadow-xs space-y-4 hover:shadow-sm transition-all duration-300"
+                  >
+                    <h3 className="text-xs uppercase font-extrabold text-slate-400 tracking-widest flex items-center gap-1.5">
+                      <UserCheck className="w-4 h-4 text-emerald-600" />
+                      <span>Account Metadata</span>
+                    </h3>
+                    <div className="space-y-3 text-xs font-semibold text-slate-600">
+                      <div className="flex justify-between">
+                        <span>Database Registry</span>
+                        <span className="text-slate-900 font-mono uppercase">MongoDB Atlas</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Authorization Method</span>
+                        <span className="text-slate-900 font-mono">HMAC JWT Token</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Portal Security</span>
+                        <span className="text-emerald-600 font-bold flex items-center gap-0.5">SSL Active</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -655,7 +843,7 @@ export default function Dashboard({ userEmail, userName, authToken, onLogout }: 
                   <div className="flex gap-3">
                     <button
                       onClick={() => setSelectedVoucherToBuy(null)}
-                      className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold hover:bg-slate-50 transition-colors cursor-pointer text-slate-700"
+                      className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold hover:bg-slate-50 transition-colors cursor-pointer text-slate-700 bg-white"
                     >
                       Cancel
                     </button>
@@ -745,7 +933,7 @@ export default function Dashboard({ userEmail, userName, authToken, onLogout }: 
                         setActiveOrder(null);
                         loadOrders(); // Reload orders in background to show incomplete order
                       }}
-                      className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold hover:bg-slate-50 transition-colors cursor-pointer text-slate-700"
+                      className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold hover:bg-slate-50 transition-colors cursor-pointer text-slate-700 bg-white"
                     >
                       Pay Later
                     </button>

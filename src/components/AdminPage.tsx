@@ -87,6 +87,13 @@ export default function AdminPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
+  // Inline editing state for modifying voucher names and prices directly from catalog list
+  const [inlineEditId, setInlineEditId] = useState<string | null>(null);
+  const [inlineTitle, setInlineTitle] = useState('');
+  const [inlineOriginalPrice, setInlineOriginalPrice] = useState(0);
+  const [inlineDiscountPrice, setInlineDiscountPrice] = useState(0);
+  const [isInlineSaving, setIsInlineSaving] = useState(false);
+
   // Orders verification state
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
@@ -297,6 +304,56 @@ export default function AdminPage() {
     });
     setFormError('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const startInlineEdit = (v: Voucher) => {
+    setInlineEditId(v.id);
+    setInlineTitle(v.title);
+    setInlineOriginalPrice(v.originalPrice);
+    setInlineDiscountPrice(v.discountPrice);
+  };
+
+  const cancelInlineEdit = () => {
+    setInlineEditId(null);
+  };
+
+  const handleInlineSave = async (v: Voucher) => {
+    if (!inlineTitle.trim()) {
+      showToast('Course name is required.');
+      return;
+    }
+    if (inlineOriginalPrice <= 0 || inlineDiscountPrice <= 0) {
+      showToast('Prices must be greater than zero.');
+      return;
+    }
+    if (inlineDiscountPrice >= inlineOriginalPrice) {
+      showToast('Discount price must be lower than original price.');
+      return;
+    }
+
+    setIsInlineSaving(true);
+    try {
+      const payload: VoucherInput = {
+        title: inlineTitle.trim(),
+        provider: v.provider,
+        iconName: v.iconName,
+        originalPrice: inlineOriginalPrice,
+        discountPrice: inlineDiscountPrice,
+        description: v.description,
+        badge: v.badge,
+        requirements: v.requirements,
+      };
+
+      if (!adminSession?.token) return;
+      await updateVoucherApi(adminSession.token, v.id, payload);
+      showToast('Voucher updated successfully.');
+      setInlineEditId(null);
+      await loadVouchers();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Failed to save voucher.');
+    } finally {
+      setIsInlineSaving(false);
+    }
   };
 
   const handleDelete = async (id: string, title: string) => {
@@ -778,39 +835,114 @@ export default function AdminPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {vouchers.map((v) => (
-                          <tr key={v.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50">
-                            <td className="px-4 py-3 font-semibold text-slate-900 max-w-xs truncate" title={v.title}>
-                              {v.title}
-                            </td>
-                            <td className="px-4 py-3">
-                              <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">{v.badge}</span>
-                            </td>
-                            <td className="px-4 py-3 text-slate-600">{v.provider}</td>
-                            <td className="px-4 py-3">
-                              <span className="text-slate-400 line-through text-xs">₹{v.originalPrice}</span>
-                              <span className="ml-2 font-bold text-[#0058be]">₹{v.discountPrice}</span>
-                            </td>
-                            <td className="px-4 py-3">
-                              <div className="flex items-center justify-end gap-2">
-                                <button
-                                  onClick={() => handleEdit(v)}
-                                  className="p-2 rounded-lg text-[#0058be] hover:bg-[#d8e2ff] transition-colors cursor-pointer bg-transparent border-none"
-                                  title="Edit"
-                                >
-                                  <Pencil className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={() => handleDelete(v.id, v.title)}
-                                  className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors cursor-pointer bg-transparent border-none"
-                                  title="Delete"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
+                        {vouchers.map((v) => {
+                          const isInlineEditing = v.id === inlineEditId;
+
+                          return (
+                            <tr key={v.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50">
+                              <td className="px-4 py-3 font-semibold text-slate-900 max-w-xs">
+                                {isInlineEditing ? (
+                                  <input
+                                    type="text"
+                                    value={inlineTitle}
+                                    onChange={(e) => setInlineTitle(e.target.value)}
+                                    className="w-full border border-slate-200 rounded px-2.5 py-1.5 text-sm focus:outline-none focus:border-[#005af2]"
+                                  />
+                                ) : (
+                                  <div className="truncate" title={v.title}>
+                                    {v.title}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">{v.badge}</span>
+                              </td>
+                              <td className="px-4 py-3 text-slate-600">{v.provider}</td>
+                              <td className="px-4 py-3">
+                                {isInlineEditing ? (
+                                  <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center">
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-[10px] text-slate-400 font-bold">Orig:</span>
+                                      <input
+                                        type="number"
+                                        min={1}
+                                        value={inlineOriginalPrice}
+                                        onChange={(e) => setInlineOriginalPrice(Number(e.target.value))}
+                                        className="w-20 border border-slate-200 rounded px-1.5 py-1 text-xs text-slate-700 font-mono focus:outline-none focus:border-[#005af2]"
+                                      />
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-[10px] text-slate-400 font-bold">Disc:</span>
+                                      <input
+                                        type="number"
+                                        min={1}
+                                        value={inlineDiscountPrice}
+                                        onChange={(e) => setInlineDiscountPrice(Number(e.target.value))}
+                                        className="w-20 border border-slate-200 rounded px-1.5 py-1 text-xs font-bold font-mono text-[#0058be] focus:outline-none focus:border-[#005af2]"
+                                      />
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <span className="text-slate-400 line-through text-xs">₹{v.originalPrice}</span>
+                                    <span className="ml-2 font-bold text-[#0058be]">₹{v.discountPrice}</span>
+                                  </div>
+                                )}
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="flex items-center justify-end gap-2">
+                                  {isInlineEditing ? (
+                                    <>
+                                      <button
+                                        onClick={() => handleInlineSave(v)}
+                                        disabled={isInlineSaving}
+                                        className="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors cursor-pointer bg-transparent border-none"
+                                        title="Save Changes"
+                                      >
+                                        {isInlineSaving ? (
+                                          <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : (
+                                          <Check className="w-4 h-4" />
+                                        )}
+                                      </button>
+                                      <button
+                                        onClick={cancelInlineEdit}
+                                        className="p-2 rounded-lg text-slate-400 hover:bg-slate-50 transition-colors cursor-pointer bg-transparent border-none"
+                                        title="Cancel"
+                                      >
+                                        <X className="w-4 h-4" />
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <button
+                                        onClick={() => startInlineEdit(v)}
+                                        className="p-2 rounded-lg text-[#0058be] hover:bg-[#d8e2ff] transition-colors cursor-pointer bg-transparent border-none"
+                                        title="Quick Edit"
+                                      >
+                                        <Pencil className="w-4 h-4" />
+                                      </button>
+                                      <button
+                                        onClick={() => handleEdit(v)}
+                                        className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer bg-transparent border-none"
+                                        title="Full Edit (Forms)"
+                                      >
+                                        <Shield className="w-4 h-4" />
+                                      </button>
+                                      <button
+                                        onClick={() => handleDelete(v.id, v.title)}
+                                        className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors cursor-pointer bg-transparent border-none"
+                                        title="Delete"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
