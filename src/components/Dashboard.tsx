@@ -258,22 +258,27 @@ export default function Dashboard({ userEmail, userName, authToken, onLogout }: 
             </p>
           </div>
 
-          <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/10 hover:bg-white/15 transition-all duration-300 group">
-            <div className="w-12 h-12 rounded-full bg-white/25 flex items-center justify-center font-bold text-lg text-[#ffddb8] border-2 border-white/35 shadow-inner uppercase group-hover:scale-105 transition-all duration-300">
-              {userName.substring(0, 2)}
+          <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md p-3.5 pl-4 pr-4 rounded-2xl border border-white/20 shadow-md hover:bg-white/15 transition-all duration-300">
+            {/* Round profile avatar on the corner */}
+            <div className="relative shrink-0">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-[#ffb95f] to-[#ffddb8] animate-pulse blur-xs opacity-75"></div>
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#4648d4] to-[#0058be] flex items-center justify-center font-black text-lg text-white border-2 border-white/40 shadow-inner uppercase relative z-10 transition-transform duration-300 hover:scale-105">
+                {userName.substring(0, 2)}
+              </div>
             </div>
-            <div className="text-left space-y-0.5">
-              <div className="font-bold text-sm leading-none flex items-center gap-1.5 text-white">
+
+            <div className="text-left space-y-1">
+              <div className="font-extrabold text-sm leading-none flex items-center gap-1.5 text-white">
                 <span>{userName}</span>
                 <UserCheck className="w-3.5 h-3.5 text-[#ffb95f]" />
               </div>
-              <div className="text-xs text-white/70 font-mono font-medium">{userEmail}</div>
+              <div className="text-[11px] text-white/80 font-mono font-medium">{userEmail}</div>
               <button
                 onClick={onLogout}
-                className="text-xs font-semibold text-[#ffddb8] hover:text-[#ffb95f] flex items-center gap-1 mt-1 transition-all cursor-pointer bg-transparent border-none"
+                className="mt-1.5 flex items-center gap-1.5 px-3 py-1.5 bg-white text-[#0058be] hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 border border-transparent text-xs font-bold rounded-lg transition-all duration-300 cursor-pointer shadow-xs hover:shadow-sm"
               >
                 <LogOut className="w-3.5 h-3.5" />
-                Sign Out / Swap Account
+                <span>Sign Out</span>
               </button>
             </div>
           </div>

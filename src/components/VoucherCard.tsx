@@ -83,6 +83,11 @@ export default function VoucherCard({ voucher, onClaim, isClaimed }: VoucherCard
             <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md">
               {voucher.badge}
             </span>
+            {voucher.voucherAmount > 0 && (
+              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-md">
+                ₹{voucher.voucherAmount.toLocaleString('en-IN')} Value
+              </span>
+            )}
           </div>
 
           <div className="text-right">
@@ -108,6 +113,11 @@ export default function VoucherCard({ voucher, onClaim, isClaimed }: VoucherCard
           <p className="text-xs text-[#424754] leading-relaxed pl-8">
             {voucher.description}
           </p>
+          {voucher.expiryDate && (
+            <p className="text-[10px] text-slate-500 font-bold pl-8 mt-1 flex items-center gap-1">
+              <span>📅 Expires: {new Date(voucher.expiryDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+            </p>
+          )}
         </div>
 
         {/* Row 3: Requirements */}

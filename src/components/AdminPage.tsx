@@ -49,6 +49,8 @@ const emptyForm = (): VoucherInput => ({
   description: '',
   badge: '',
   requirements: [''],
+  expiryDate: '',
+  voucherAmount: 0,
 });
 
 function getStoredAdminSession(): UserSession | null {
@@ -248,6 +250,14 @@ export default function AdminPage() {
       setFormError('Discount price must be lower than original price.');
       return false;
     }
+    if (!form.expiryDate.trim()) {
+      setFormError('Expiry date is required.');
+      return false;
+    }
+    if (form.voucherAmount <= 0) {
+      setFormError('Voucher amount must be greater than zero.');
+      return false;
+    }
     const reqs = form.requirements.map((r) => r.trim()).filter(Boolean);
     if (reqs.length === 0) {
       setFormError('Add at least one prerequisite.');
@@ -267,6 +277,8 @@ export default function AdminPage() {
       title: form.title.trim(),
       badge: form.badge.trim(),
       description: form.description.trim(),
+      expiryDate: form.expiryDate.trim(),
+      voucherAmount: form.voucherAmount,
       requirements,
     };
 
@@ -301,6 +313,8 @@ export default function AdminPage() {
       description: voucher.description,
       badge: voucher.badge,
       requirements: voucher.requirements.length > 0 ? [...voucher.requirements] : [''],
+      expiryDate: voucher.expiryDate || '',
+      voucherAmount: voucher.voucherAmount || 0,
     });
     setFormError('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -342,6 +356,8 @@ export default function AdminPage() {
         description: v.description,
         badge: v.badge,
         requirements: v.requirements,
+        expiryDate: v.expiryDate,
+        voucherAmount: v.voucherAmount,
       };
 
       if (!adminSession?.token) return;
@@ -721,6 +737,37 @@ export default function AdminPage() {
                     />
                   </div>
 
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5" />
+                      Voucher Expiry Date *
+                    </label>
+                    <input
+                      type="date"
+                      value={form.expiryDate}
+                      onChange={(e) => setForm({ ...form, expiryDate: e.target.value })}
+                      className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-[#005af2]"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                      <DollarSign className="w-3.5 h-3.5" />
+                      Voucher Amount *
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      step={1}
+                      value={form.voucherAmount || ''}
+                      onChange={(e) => setForm({ ...form, voucherAmount: Number(e.target.value) })}
+                      placeholder="e.g. 15000"
+                      className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-[#005af2]"
+                      required
+                    />
+                  </div>
+
                   <div className="space-y-1 md:col-span-2">
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                       Description *
@@ -830,6 +877,8 @@ export default function AdminPage() {
                           <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Course</th>
                           <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Badge</th>
                           <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Provider</th>
+                          <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Value</th>
+                          <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Expiry</th>
                           <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Price</th>
                           <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
                         </tr>
@@ -858,6 +907,12 @@ export default function AdminPage() {
                                 <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">{v.badge}</span>
                               </td>
                               <td className="px-4 py-3 text-slate-600">{v.provider}</td>
+                              <td className="px-4 py-3 font-semibold text-slate-700">
+                                ₹{v.voucherAmount || 0}
+                              </td>
+                              <td className="px-4 py-3 font-mono text-xs text-slate-600">
+                                {v.expiryDate || 'N/A'}
+                              </td>
                               <td className="px-4 py-3">
                                 {isInlineEditing ? (
                                   <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center">

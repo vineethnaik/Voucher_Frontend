@@ -13,6 +13,8 @@ export interface Voucher {
   description: string;
   badge: string;
   requirements: string[];
+  expiryDate?: string;
+  voucherAmount?: number;
 }
 
 export interface UserVoucher {
